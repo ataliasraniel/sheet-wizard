@@ -26,19 +26,10 @@ void loadExcelFile() {
 
 void initiateFile(bytes) {
   var excel = Excel.decodeBytes(bytes);
-  // getOneTable(excel.tables.entries.first.value);
   for (var i = 0; i < excel.tables.entries.length; i++) {
     getOneTable(excel.tables.entries.toList()[i].value);
   }
   serializeToJson();
-  // serializeToJson(headers: excel.tables.keys.toList());
-  // for (var table in excel.tables.keys) {
-  //   print(table); //sheet Name
-  //   print(excel.tables[table]!.maxCols);
-  //   print(excel.tables[table]!.maxRows);
-  //   for (var row in excel.tables[table]!.rows) {
-  //   }
-  // }
 }
 
 void serializeToJson() {
@@ -66,7 +57,6 @@ void getOneTable(Sheet sheet) {
     'schedule': schedule,
   };
   busData.add(data);
-  // writeToFile('./busschedule.json', json.encode(data));
 }
 
 Future<File> writeToFile(String fileName, String data) async {
