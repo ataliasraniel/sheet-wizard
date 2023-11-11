@@ -1,22 +1,22 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:excel/excel.dart';
 
 List<Map<String, dynamic>> busData = [];
+List<String> districts = [];
+final List<List<String>> schedules = [];
 
 void start() {
   loadExcelFile();
 }
 
 //change this to your excel file location
-final String excelFileLocationPath = './assets/carta.xlsx';
+final String excelFileLocationPath = './assets/uteis.xlsx';
 
 void loadExcelFile() {
   final File excelFile = File(excelFileLocationPath);
   if (excelFile.existsSync()) {
-    print('File exists');
     var bytes = excelFile.readAsBytesSync();
     initiateFile(bytes);
   } else {
@@ -24,39 +24,51 @@ void loadExcelFile() {
   }
 }
 
-void initiateFile(bytes) {
-  var excel = Excel.decodeBytes(bytes);
-  for (var i = 0; i < excel.tables.entries.length; i++) {
-    getOneTable(excel.tables.entries.toList()[i].value);
+void initiateFile(List<int> bytes) {
+  final sheet = Excel.decodeBytes(bytes);
+  final Sheet table = sheet.tables['Table 1']!;
+  for (var element in table.rows.first) {
+    if (element != null && element.value != null) {
+      districts.add(element.value.toString());
+    }
   }
-  serializeToJson();
-}
 
-void serializeToJson() {
-  writeToFile('./busschedule.json', json.encode(busData));
-}
+  final Map<String, dynamic> jsonData = {};
+  for (var district in districts) {
+    jsonData[district] = [];
+  }
+  final int rowsLength = table.rows.length;
+  for (var i = 0; i < districts.length; i++) {
+    schedules.add([]);
+  }
+  for (var element in table.rows.first) {
+    if (element?.value != null) {
+      if (districts.contains(element!.value.toString())) {
+        final index = districts.indexOf(element.value.toString());
+        print('iterating index $index');
+        for (var i = 3; i < rowsLength; i++) {
+          final row = table.rows[i];
+          List<String> values = [];
+          final valueOne = row[0 + index > 0 ? index * 2 : index]?.value;
+          final valueTwo = row[1 + index > 0 ? index * 2 + 1 : index * 2 + 1]?.value;
 
-void getOneTable(Sheet sheet) {
-  List<String> leftTime = [];
-  List<String> arriveTime = [];
-  for (var i = 4; i < sheet.rows.length; i++) {
-    leftTime.add(sheet.rows[i][2]?.value.toString() ?? '--');
+          if (valueOne == null || valueTwo == null) continue;
+          values.add(valueOne.toString());
+          values.add(valueTwo.toString());
+          schedules[index].add(values.toString());
+        }
+      }
+    }
   }
-  for (var i = 4; i < sheet.rows.length; i++) {
-    arriveTime.add(sheet.rows[i][3]?.value.toString() ?? '--');
+
+  schedules.removeWhere((element) => element.isEmpty);
+  final Map<String, dynamic> schedulesJson = {};
+  for (var i = 0; i < districts.length; i++) {
+    schedulesJson[districts[i]] = schedules[i];
   }
-  List<Map<String, dynamic>> schedule = [];
-  for (var i = 0; i < leftTime.length; i++) {
-    schedule.add({
-      'leftTime': leftTime[i],
-      'arriveTime': arriveTime[i],
-    });
-  }
-  Map<String, dynamic> data = {
-    'header': sheet.sheetName,
-    'schedule': schedule,
-  };
-  busData.add(data);
+  print(schedulesJson);
+
+  writeToFile('./assets/uteis.json', jsonEncode(schedulesJson));
 }
 
 Future<File> writeToFile(String fileName, String data) async {
