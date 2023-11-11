@@ -74,6 +74,9 @@ void initiateFile(List<int> bytes) {
             nulableRowsCount = 0;
           }
         }
+        nullableRows.removeWhere((element) => element == 0);
+
+        final int actualIndex = nullableRows[index] + 1;
         for (var i = 3; i < rowsLength; i++) {
           final row = table.rows[i];
           List<String> values = [];
@@ -95,14 +98,13 @@ void initiateFile(List<int> bytes) {
     schedulesJson[districts[i]] = schedules[i];
   }
   //remove the zeros from the nullableRows list
-  nullableRows.removeWhere((element) => element == 0);
   final List<int> newNullables = nullableRows.sublist(0, 9);
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
-  print(newNullables);
+  // print(newNullables);
 
-  // writeToFile('./assets/uteis.json', jsonEncode(schedulesJson));
+  writeToFile('./assets/uteis.json', jsonEncode(schedulesJson));
 }
 
 Future<File> writeToFile(String fileName, String data) async {
