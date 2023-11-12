@@ -80,12 +80,31 @@ void initiateFile(List<int> bytes) {
         for (var i = 3; i < rowsLength; i++) {
           final row = table.rows[i];
           List<String> values = [];
-          final valueOne = row[0 + index > 0 ? index * 2 : index]?.value;
-          final valueTwo = row[1 + index > 0 ? index * 2 + 1 : index * 2 + 1]?.value;
+          var valueOne;
+          var valueTwo;
+          var valueThree;
+          var valueFour;
+          // print('iterating ${nullableRows[index]}');
+          if (nullableRows[index] == 3) {
+            // print('ITERATING THIS ${districts[index]}}');
 
-          if (valueOne == null || valueTwo == null) continue;
+            valueOne = row[0 + index > 0 ? index * 2 + 1 : index]?.value ?? '';
+            valueTwo = row[1 + index > 0 ? index * 2 + 2 : index]?.value ?? '';
+            valueThree = row[2 + index > 0 ? index * 2 + 3 : index]?.value ?? '';
+            valueFour = row[3 + index > 0 ? index * 2 + 4 : index]?.value ?? '';
+          } else if (nullableRows[index] == 2) {
+            valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
+            valueTwo = row[1 + index > 0 ? index * 2 + 1 : index + 1]?.value ?? '';
+            valueThree = row[2 + index > 0 ? index * 2 + 2 : index + 2]?.value ?? '';
+          } else {
+            valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
+            valueTwo = row[1 + index > 0 ? index * 2 + 1 : index * 2 + 1]?.value ?? '';
+          }
+
           values.add(valueOne.toString());
           values.add(valueTwo.toString());
+          values.add(valueThree.toString());
+          values.add(valueFour.toString());
           schedules[index].add(values.toString());
         }
       }
@@ -103,6 +122,8 @@ void initiateFile(List<int> bytes) {
     newNullables[i] = newNullables[i] + 1;
   }
   // print(newNullables);
+  // print(schedules[3]);
+  // print(schedulesJson['QUARTEL']);
 
   writeToFile('./assets/uteis.json', jsonEncode(schedulesJson));
 }
