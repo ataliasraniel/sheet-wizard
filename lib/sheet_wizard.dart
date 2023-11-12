@@ -17,21 +17,33 @@ List<String> districts = [];
 final List<List<String>> schedules = [];
 
 final List<int> nullableRows = [];
+final List<String> files = [
+  './assets/uteis.xlsx',
+  './assets/sabado.xlsx',
+  './assets/domingo.xlsx',
+];
+final List<File> excelFiles = [];
 
 void start() {
   loadExcelFile();
 }
 
 //change this to your excel file location
-final String excelFileLocationPath = './assets/uteis.xlsx';
 
-void loadExcelFile() {
-  final File excelFile = File(excelFileLocationPath);
-  if (excelFile.existsSync()) {
-    var bytes = excelFile.readAsBytesSync();
-    initiateFile(bytes);
-  } else {
-    print('File does not exist');
+void loadExcelFile() async {
+  for (var i = 0; i < files.length; i++) {
+    excelFiles.add(File(files[i]));
+    print('done Loading files ${excelFiles[i].path}');
+  }
+
+  for (var i = 0; i < excelFiles.length; i++) {
+    final bytes = excelFiles[i].readAsBytesSync();
+    final response = await initiateFile(bytes, excelFiles[i].path.replaceAll('xlsx', '').split('/').last);
+    if (response != null) {
+      print('done writing to file ${response.path}');
+    } else {
+      print('error writing to file');
+    }
   }
 }
 
@@ -40,7 +52,7 @@ void loadExcelFile() {
 /// [bytes] is a list of integers representing the bytes of the file.
 ///
 /// FILEPATH: /C:/Users/atali/Desktop/My apps/sheet-wizard/lib/sheet_wizard.dart
-void initiateFile(List<int> bytes) {
+Future initiateFile(List<int> bytes, String fileName) async {
   final sheet = Excel.decodeBytes(bytes);
   final Sheet table = sheet.tables['Table 1']!;
   for (var element in table.rows.first) {
@@ -76,15 +88,13 @@ void initiateFile(List<int> bytes) {
         }
         nullableRows.removeWhere((element) => element == 0);
 
-        final int actualIndex = nullableRows[index] + 1;
-        for (var i = 3; i < rowsLength; i++) {
+        for (var i = 2; i < rowsLength; i++) {
           final row = table.rows[i];
           List<String> values = [];
-          var valueOne;
-          var valueTwo;
-          var valueThree;
-          var valueFour;
-          // print('iterating ${nullableRows[index]}');
+          dynamic valueOne;
+          dynamic valueTwo;
+          dynamic valueThree;
+          dynamic valueFour;
           if (nullableRows[index] == 3) {
             // print('ITERATING THIS ${districts[index]}}');
 
@@ -121,11 +131,15 @@ void initiateFile(List<int> bytes) {
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
-  // print(newNullables);
-  // print(schedules[3]);
-  // print(schedulesJson['QUARTEL']);
-
-  writeToFile('./assets/uteis.json', jsonEncode(schedulesJson));
+  final response = await writeToFile('./assets/json/$fileName.json', jsonEncode(schedulesJson));
+  if (response.path.isNotEmpty) {
+    districts.clear();
+    schedules.clear();
+    nullableRows.clear();
+    return response;
+  } else {
+    return null;
+  }
 }
 
 Future<File> writeToFile(String fileName, String data) async {
@@ -134,8 +148,4 @@ Future<File> writeToFile(String fileName, String data) async {
     print('File written');
     return value;
   });
-}
-
-int _getCellLengthValue(Data? data) {
-  return 0;
 }
