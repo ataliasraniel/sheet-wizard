@@ -14,7 +14,7 @@ import 'package:excel/excel.dart';
 
 List<Map<String, dynamic>> busData = [];
 List<String> districts = [];
-final List<List<String>> schedules = [];
+final List<List<List<String>>> schedules = [];
 
 final List<int> nullableRows = [];
 final List<String> files = [
@@ -38,7 +38,7 @@ void loadExcelFile() async {
 
   for (var i = 0; i < excelFiles.length; i++) {
     final bytes = excelFiles[i].readAsBytesSync();
-    final response = await initiateFile(bytes, excelFiles[i].path.replaceAll('xlsx', '').split('/').last);
+    final response = await startConverting(bytes, excelFiles[i].path.replaceAll('xlsx', '').replaceAll('.', '').split('/').last);
     if (response != null) {
       print('done writing to file ${response.path}');
     } else {
@@ -52,8 +52,9 @@ void loadExcelFile() async {
 /// [bytes] is a list of integers representing the bytes of the file.
 ///
 /// FILEPATH: /C:/Users/atali/Desktop/My apps/sheet-wizard/lib/sheet_wizard.dart
-Future initiateFile(List<int> bytes, String fileName) async {
+Future startConverting(List<int> bytes, String fileName) async {
   final sheet = Excel.decodeBytes(bytes);
+  //Você pode alterar o nome da table se quiser
   final Sheet table = sheet.tables['Table 1']!;
   for (var element in table.rows.first) {
     if (element != null && element.value != null) {
@@ -74,7 +75,6 @@ Future initiateFile(List<int> bytes, String fileName) async {
     if (element?.value != null) {
       if (districts.contains(element!.value.toString())) {
         final index = districts.indexOf(element.value.toString());
-        print('iterating index $index');
         int nulableRowsCount = 0;
         for (var element in table.rows[0]) {
           //check if the element is null, and if it is, increment the nullable count
@@ -95,35 +95,66 @@ Future initiateFile(List<int> bytes, String fileName) async {
           dynamic valueTwo;
           dynamic valueThree;
           dynamic valueFour;
-          if (nullableRows[index] == 3) {
-            // print('ITERATING THIS ${districts[index]}}');
-
-            valueOne = row[0 + index > 0 ? index * 2 + 1 : index]?.value ?? '';
-            valueTwo = row[1 + index > 0 ? index * 2 + 2 : index]?.value ?? '';
-            valueThree = row[2 + index > 0 ? index * 2 + 3 : index]?.value ?? '';
-            valueFour = row[3 + index > 0 ? index * 2 + 4 : index]?.value ?? '';
-          } else if (nullableRows[index] == 2) {
-            valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
-            valueTwo = row[1 + index > 0 ? index * 2 + 1 : index + 1]?.value ?? '';
-            valueThree = row[2 + index > 0 ? index * 2 + 2 : index + 2]?.value ?? '';
-          } else {
-            valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
-            valueTwo = row[1 + index > 0 ? index * 2 + 1 : index * 2 + 1]?.value ?? '';
+          // print('${districts[index]} nullable rows list ${nullableRows[index]}');
+          switch (nullableRows[index]) {
+            case 1:
+              if (index == 0) {
+                valueOne = row[0]?.value ?? '';
+                valueTwo = row[1]?.value ?? '';
+              } else if (index > 0) {
+                if (districts[index] == 'INDIANO') {
+                  print('its indiano');
+                  print(nullableRows[index]);
+                  print(index);
+                }
+                valueOne = row[0 + index * 2 + 1]?.value ?? '';
+                valueTwo = row[1 + index * 2 + 1]?.value ?? '';
+              }
+              break;
+            case 2:
+              if (index == 0) {
+                valueOne = row[0]?.value ?? '';
+                valueTwo = row[1]?.value ?? '';
+                valueThree = row[2]?.value ?? '';
+              } else if (index > 0) {
+                valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
+                valueTwo = row[1 + index > 0 ? index * 2 + 1 : index + 1]?.value ?? '';
+                valueThree = row[2 + index > 0 ? index * 2 + 2 : index + 2]?.value ?? '';
+              }
+              break;
+            case 3:
+              if (index == 0) {
+                print('ITSSSSSSSSSSSSSSSSSSSSSSSzero and its 3');
+              }
+              if (districts[index] == 'LINHA BRASILIA') {
+                print(index);
+              }
+              valueOne = row[0 + index * 2 + 1]?.value ?? '';
+              valueTwo = row[1 + index * 2 + 1]?.value ?? '';
+              valueThree = row[2 + index * 2 + 1]?.value ?? '';
+              valueFour = row[3 + index * 2 + 1]?.value ?? '';
+              break;
+            default:
           }
+          // if (nullableRows[index] == 3) {
+          // } else if (nullableRows[index] == 2) {}
 
           values.add(valueOne.toString());
           values.add(valueTwo.toString());
           values.add(valueThree.toString());
           values.add(valueFour.toString());
-          schedules[index].add(values.toString());
+
+          schedules[index].add(values);
         }
       }
     }
   }
 
   schedules.removeWhere((element) => element.isEmpty);
+
   final Map<String, dynamic> schedulesJson = {};
   for (var i = 0; i < districts.length; i++) {
+    districts[i] = districts[i].replaceAll('LINHA', '');
     schedulesJson[districts[i]] = schedules[i];
   }
   //remove the zeros from the nullableRows list
@@ -131,6 +162,9 @@ Future initiateFile(List<int> bytes, String fileName) async {
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
+  // print(districts[7]);
+  // print(schedules[7]);
+  // return;
   final response = await writeToFile('./assets/json/$fileName.json', jsonEncode(schedulesJson));
   if (response.path.isNotEmpty) {
     districts.clear();
