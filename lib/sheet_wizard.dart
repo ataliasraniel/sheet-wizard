@@ -19,8 +19,8 @@ final List<List<List<String>>> schedules = [];
 final List<int> nullableRows = [];
 final List<String> files = [
   './assets/uteis.xlsx',
-  './assets/sabado.xlsx',
-  './assets/domingo.xlsx',
+  // './assets/sabado.xlsx',
+  // './assets/domingo.xlsx',
 ];
 final List<File> excelFiles = [];
 
@@ -70,12 +70,16 @@ Future startConverting(List<int> bytes, String fileName) async {
   for (var i = 0; i < districts.length; i++) {
     schedules.add([]);
   }
-
-  for (var element in table.rows.first) {
+  print(table.rows.first[21]?.value);
+  int rowOffset = 0;
+  for (var i = 0; i < table.rows.first.length; i++) {
+    final element = table.rows.first[i];
     if (element?.value != null) {
       if (districts.contains(element!.value.toString())) {
         final index = districts.indexOf(element.value.toString());
         int nulableRowsCount = 0;
+        int rowOffset = 0;
+
         for (var element in table.rows[0]) {
           //check if the element is null, and if it is, increment the nullable count
           //and when find a non null element, add the number to the list and reset the count and so on
@@ -87,28 +91,26 @@ Future startConverting(List<int> bytes, String fileName) async {
           }
         }
         nullableRows.removeWhere((element) => element == 0);
-
-        for (var i = 2; i < rowsLength; i++) {
-          final row = table.rows[i];
+        for (var j = 2; j < rowsLength; j++) {
+          final row = table.rows[j];
           List<String> values = [];
           dynamic valueOne;
           dynamic valueTwo;
           dynamic valueThree;
           dynamic valueFour;
-          // print('${districts[index]} nullable rows list ${nullableRows[index]}');
           switch (nullableRows[index]) {
             case 1:
               if (index == 0) {
                 valueOne = row[0]?.value ?? '';
                 valueTwo = row[1]?.value ?? '';
               } else if (index > 0) {
-                if (districts[index] == 'INDIANO') {
-                  print('its indiano');
-                  print(nullableRows[index]);
-                  print(index);
+                if (index == 2) {
+                  rowOffset = 1;
+                } else {
+                  rowOffset = 3;
                 }
-                valueOne = row[0 + index * 2 + 1]?.value ?? '';
-                valueTwo = row[1 + index * 2 + 1]?.value ?? '';
+                valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
+                valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
               }
               break;
             case 2:
@@ -123,21 +125,19 @@ Future startConverting(List<int> bytes, String fileName) async {
               }
               break;
             case 3:
-              if (index == 0) {
-                print('ITSSSSSSSSSSSSSSSSSSSSSSSzero and its 3');
+              rowOffset = 1;
+              if (index > 3) {
+                rowOffset = 3;
+              } else {
+                rowOffset = 1;
               }
-              if (districts[index] == 'LINHA BRASILIA') {
-                print(index);
-              }
-              valueOne = row[0 + index * 2 + 1]?.value ?? '';
-              valueTwo = row[1 + index * 2 + 1]?.value ?? '';
-              valueThree = row[2 + index * 2 + 1]?.value ?? '';
-              valueFour = row[3 + index * 2 + 1]?.value ?? '';
+              valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
+              valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
+              valueThree = row[2 + index * 2 + rowOffset]?.value ?? '';
+              valueFour = row[3 + index * 2 + rowOffset]?.value ?? '';
               break;
             default:
           }
-          // if (nullableRows[index] == 3) {
-          // } else if (nullableRows[index] == 2) {}
 
           values.add(valueOne.toString());
           values.add(valueTwo.toString());
@@ -158,12 +158,13 @@ Future startConverting(List<int> bytes, String fileName) async {
     schedulesJson[districts[i]] = schedules[i];
   }
   //remove the zeros from the nullableRows list
-  final List<int> newNullables = nullableRows.sublist(0, 9);
+  final List<int> newNullables = nullableRows.sublist(0, 10);
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
-  // print(districts[7]);
-  // print(schedules[7]);
+  // int selectedDistrict = 8;
+  // print(districts[selectedDistrict]);
+  // print(schedules[selectedDistrict]);
   // return;
   final response = await writeToFile('./assets/json/$fileName.json', jsonEncode(schedulesJson));
   if (response.path.isNotEmpty) {
