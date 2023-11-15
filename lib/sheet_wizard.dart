@@ -112,6 +112,12 @@ Future startConverting(List<int> bytes, String fileName) async {
                 valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
                 valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
               }
+              if (districts[index] == 'PARQUE FENIX') {
+                valueOne = row[0 + index * 2 + rowOffset + 2]?.value ?? '';
+                valueTwo = row[1 + index * 2 + rowOffset + 2]?.value ?? '';
+                valueThree = row[1 + index * 2 + rowOffset + 3]?.value ?? '';
+                valueFour = row[1 + index * 2 + rowOffset + 4]?.value ?? '';
+              }
               break;
             case 2:
               if (index == 0) {
@@ -162,9 +168,9 @@ Future startConverting(List<int> bytes, String fileName) async {
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
-  // int selectedDistrict = 8;
-  // print(districts[selectedDistrict]);
-  // print(schedules[selectedDistrict]);
+  int selectedDistrict = 8;
+  print(districts[selectedDistrict]);
+  print(schedules[selectedDistrict]);
   // return;
   final response = await writeToFile('./assets/json/$fileName.json', jsonEncode(schedulesJson));
   if (response.path.isNotEmpty) {
