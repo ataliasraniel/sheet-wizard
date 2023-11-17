@@ -38,7 +38,8 @@ void loadExcelFile() async {
 
   for (var i = 0; i < excelFiles.length; i++) {
     final bytes = excelFiles[i].readAsBytesSync();
-    final response = await startConverting(bytes, excelFiles[i].path.replaceAll('xlsx', '').replaceAll('.', '').split('/').last);
+    final response = await startConverting(
+        bytes, excelFiles[i].path.replaceAll('xlsx', '').replaceAll('.', '').split('/').last, excelFiles[i].path.contains('sabado') ? 2 : 3);
     if (response != null) {
       print('done writing to file ${response.path}');
     } else {
@@ -52,7 +53,7 @@ void loadExcelFile() async {
 /// [bytes] is a list of integers representing the bytes of the file.
 ///
 /// FILEPATH: /C:/Users/atali/Desktop/My apps/sheet-wizard/lib/sheet_wizard.dart
-Future startConverting(List<int> bytes, String fileName) async {
+Future startConverting(List<int> bytes, String fileName, int multiplierIndex) async {
   final sheet = Excel.decodeBytes(bytes);
   //Você pode alterar o nome da table se quiser
   final Sheet table = sheet.tables['Table 1']!;
@@ -70,8 +71,6 @@ Future startConverting(List<int> bytes, String fileName) async {
   for (var i = 0; i < districts.length; i++) {
     schedules.add([]);
   }
-  print(table.rows.first[21]?.value);
-  int rowOffset = 0;
   for (var i = 0; i < table.rows.first.length; i++) {
     final element = table.rows.first[i];
     if (element?.value != null) {
@@ -125,22 +124,35 @@ Future startConverting(List<int> bytes, String fileName) async {
                 valueTwo = row[1]?.value ?? '';
                 valueThree = row[2]?.value ?? '';
               } else if (index > 0) {
-                valueOne = row[0 + index > 0 ? index * 2 : index]?.value ?? '';
-                valueTwo = row[1 + index > 0 ? index * 2 + 1 : index + 1]?.value ?? '';
-                valueThree = row[2 + index > 0 ? index * 2 + 2 : index + 2]?.value ?? '';
+                if (index == 2) {
+                  rowOffset = 1;
+                } else {
+                  rowOffset = 0;
+                }
+                valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
+                valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
+                valueThree = row[2 + index * 2 + rowOffset]?.value ?? '';
               }
               break;
             case 3:
-              rowOffset = 1;
-              if (index > 3) {
-                rowOffset = 3;
-              } else {
+              if (index == 0) {
+                valueOne = row[0]?.value ?? '';
+                valueTwo = row[1]?.value ?? '';
+                valueThree = row[2]?.value ?? '';
+                valueFour = row[3]?.value ?? '';
+              } else if (index > 0) {
                 rowOffset = 1;
+                if (index > 3) {
+                  rowOffset = 3;
+                } else {
+                  rowOffset = 1;
+                }
+                valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
+                valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
+                valueThree = row[2 + index * 2 + rowOffset]?.value ?? '';
+                valueFour = row[3 + index * 2 + rowOffset]?.value ?? '';
               }
-              valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
-              valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
-              valueThree = row[2 + index * 2 + rowOffset]?.value ?? '';
-              valueFour = row[3 + index * 2 + rowOffset]?.value ?? '';
+
               break;
             default:
           }
@@ -163,15 +175,15 @@ Future startConverting(List<int> bytes, String fileName) async {
     districts[i] = districts[i].replaceAll('LINHA', '');
     schedulesJson[districts[i]] = schedules[i];
   }
-  //remove the zeros from the nullableRows list
   final List<int> newNullables = nullableRows.sublist(0, 10);
   for (var i = 0; i < newNullables.length; i++) {
     newNullables[i] = newNullables[i] + 1;
   }
-  int selectedDistrict = 8;
-  print(districts[selectedDistrict]);
-  print(schedules[selectedDistrict]);
-  // return;
+  for (var i = 0; i < districts.length; i++) {
+    int selectedDistrict = i;
+    print(districts[selectedDistrict]);
+    print(schedules[selectedDistrict][1]);
+  }
   final response = await writeToFile('./assets/json/$fileName.json', jsonEncode(schedulesJson));
   if (response.path.isNotEmpty) {
     districts.clear();
