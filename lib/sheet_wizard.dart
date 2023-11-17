@@ -109,7 +109,6 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
                 } else {
                   rowOffset = 3;
                 }
-                if (districts[index] == 'COHAB 3') {}
                 if (columnsLength == 24 && index != 2) {
                   rowOffset = 2;
                 } else if (columnsLength == 15 && index != 2) {
@@ -176,12 +175,10 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
               break;
             default:
           }
-
           values.add(valueOne.toString());
           values.add(valueTwo.toString());
           values.add(valueThree.toString());
           values.add(valueFour.toString());
-
           schedules[index].add(values);
         }
       }
@@ -193,6 +190,9 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
   final Map<String, dynamic> schedulesJson = {};
   for (var i = 0; i < districts.length; i++) {
     districts[i] = districts[i].replaceAll('LINHA', '');
+    districts[i] = districts[i].replaceAll('- ', '');
+    districts[i] = districts[i].replaceAll(' / ', '/');
+    districts[i] = districts[i].trim();
     schedulesJson[districts[i]] = schedules[i];
   }
   final List<int> newNullables = nullableRows.sublist(0, 10);
