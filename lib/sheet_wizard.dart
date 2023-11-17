@@ -19,8 +19,8 @@ final List<List<List<String>>> schedules = [];
 final List<int> nullableRows = [];
 final List<String> files = [
   './assets/uteis.xlsx',
-  // './assets/sabado.xlsx',
-  // './assets/domingo.xlsx',
+  './assets/sabado.xlsx',
+  './assets/domingo.xlsx',
 ];
 final List<File> excelFiles = [];
 
@@ -68,6 +68,7 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
     jsonData[district] = [];
   }
   final int rowsLength = table.rows.length;
+  final int columnsLength = table.rows.first.length;
   for (var i = 0; i < districts.length; i++) {
     schedules.add([]);
   }
@@ -108,14 +109,27 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
                 } else {
                   rowOffset = 3;
                 }
+                if (districts[index] == 'COHAB 3') {}
+                if (columnsLength == 24 && index != 2) {
+                  rowOffset = 2;
+                } else if (columnsLength == 15 && index != 2) {
+                  rowOffset = 1;
+                }
                 valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
                 valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
               }
-              if (districts[index] == 'PARQUE FENIX') {
-                valueOne = row[0 + index * 2 + rowOffset + 2]?.value ?? '';
-                valueTwo = row[1 + index * 2 + rowOffset + 2]?.value ?? '';
-                valueThree = row[1 + index * 2 + rowOffset + 3]?.value ?? '';
-                valueFour = row[1 + index * 2 + rowOffset + 4]?.value ?? '';
+              if (index == districts.length - 1 && nulableRowsCount >= 3) {
+                if (columnsLength == 25) {
+                  rowOffset = 5;
+                } else if (columnsLength == 24) {
+                  rowOffset = 4;
+                } else if (columnsLength == 15) {
+                  rowOffset = 1;
+                }
+                valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
+                valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
+                valueThree = row[2 + index * 2 + rowOffset]?.value ?? '';
+                valueFour = row[3 + index * 2 + rowOffset]?.value ?? '';
               }
               break;
             case 2:
@@ -128,6 +142,9 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
                   rowOffset = 1;
                 } else {
                   rowOffset = 0;
+                }
+                if (columnsLength == 24 && index != 1) {
+                  rowOffset = 1;
                 }
                 valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
                 valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
@@ -146,6 +163,9 @@ Future startConverting(List<int> bytes, String fileName, int multiplierIndex) as
                   rowOffset = 3;
                 } else {
                   rowOffset = 1;
+                }
+                if (columnsLength == 24 && index != 1) {
+                  rowOffset = 2;
                 }
                 valueOne = row[0 + index * 2 + rowOffset]?.value ?? '';
                 valueTwo = row[1 + index * 2 + rowOffset]?.value ?? '';
